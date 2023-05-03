@@ -30,9 +30,10 @@
      siteName: 'FrontEndeiros',
      siteSlogan: 'Programando para o futuro',
      apiContactsURL: apiBaseURL + 'contacts',
-     apiArticlesURL: apiBaseURL + 'articles?_sort=date&_order=desc',
+     apiArticlesURL: apiBaseURL + 'articles?_sort=date&_order=desc&status=on',
      apiArticleURL: apiBaseURL + 'articles/',
-     apiUserURL: apiBaseURL + 'users/'
+     apiUserURL: apiBaseURL + 'users/',
+     apiCommentURL: apiBaseURL + 'comments?_sort=date&_order=desc&status=on'
  }
  
  /**
@@ -62,7 +63,7 @@
  
      // Monitora status de autenticação do usuário
      firebase.auth().onAuthStateChanged((user) => {
-  
+ 
          // Se o usuário está logado...
          if (user) {
  
@@ -86,17 +87,17 @@
       **/
  
      // Verifica se o 'localStorage' contém uma rota.
-     if (localStorage.path == undefined) {
+     if (sessionStorage.path == undefined) {
  
          // Se não contém, aponta a rota 'home'.
-         localStorage.path = 'home'
+         sessionStorage.path = 'home'
      }
  
      // Armazena a rota obtida em 'path'.        
-     var path = localStorage.path
+     var path = sessionStorage.path
  
      // Apaga o 'localStorage', liberando o recurso.
-     delete localStorage.path
+     delete sessionStorage.path
  
      // Carrega a página solicitada pela rota.
      loadpage(path)
@@ -112,6 +113,9 @@
  // Faz login do usuário usando o Firebase Authentication
  function fbLogin() {
      firebase.auth().signInWithPopup(provider)
+         .then(() => {
+             loadpage('home')
+         })
  }
  
  /**
@@ -265,6 +269,13 @@
                  $.getScript(path.js)
              }
  
+         })
+ 
+         // Se ocorreu falha em carregar o documento...
+         .catch(() => {
+ 
+             // Carrega a página de erro 404 sem atualizar a rota.
+             loadpage('e404', false)
          })
  
      /**
