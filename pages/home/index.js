@@ -31,6 +31,8 @@ function myHome() {
         // Armazena os artigos obtidos em "data".
         .done((data) => {
 
+            console.log('+++', data)
+
             // Extrai cada um dos artigos para o objeto "art".
             data.forEach((art) => {
 
@@ -43,7 +45,7 @@ function myHome() {
                             <p>${art.resume}</p>
                         </div>
                     </div>                    
-                `
+                ` 
             })
 
             // Exibe a lista de artigos na 'home'.
