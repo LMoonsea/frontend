@@ -14,7 +14,7 @@ function myView() {
             $('#artContent').html(artData.content)
             updateViews(artData)
             changeTitle(artData.title)
-            getAuthorData(artData)
+            getAuthor(artData)
             getAuthorArticles(artData, 5)
             getUserCommentForm(artData)
             getArticleComments(artData, 999)
@@ -26,18 +26,20 @@ function myView() {
 
 }
 
-function getAuthorData(artData) {
+function getAuthor(artData) {
     $.get(app.apiBaseURL + 'users/' + artData.author)
         .done((userData) => {
+
 
             var socialList = ''
             if (Object.keys(userData.social).length > 0) {
                 socialList = '<ul class="social-list">'
                 for (const social in userData.social) {
-                    socialList += `<li><a href="${userData.social[social]}" target="_blank">${social}</a></li>`
+                    socialList += `<li><a href="${userData.social[social]}" target="_blank"><i class="fa-brands fa-fw fa-${social.toLowerCase()}"></i> ${social}</a></li>`
                 }
                 socialList += '</ul>'
             }
+
 
             $('#artMetadata').html(`<span>Por ${userData.name}</span><span>em ${myDate.sysToBr(artData.date)}.</span>`)
             $('#artAuthor').html(`
@@ -60,14 +62,14 @@ function getAuthorArticles(artData, limit) {
         author: artData.author,
         status: 'on',
         id_ne: artData.id,
-        _limit: limit
+        _limit: limit || 5
     })
         .done((artsData) => {
             if (artsData.length > 0) {
                 var output = '<h3><i class="fa-solid fa-plus fa-fw"></i> Artigos</h3><ul>'
                 var rndData = artsData.sort(() => Math.random() - 0.5)
                 rndData.forEach((artItem) => {
-                    output += `<li class="art-item" data-id="${artItem.id}">${artItem.title}</li>`
+                    output += `<li class="article" data-id="${artItem.id}">${artItem.title}</li>`
                 });
                 output += '</ul>'
                 $('#authorArtcicles').html(output)
@@ -89,7 +91,7 @@ function getArticleComments(artData, limit) {
         status: 'on',
         _sort: 'date',
         _order: 'desc',
-        _limit: limit
+        _limit: limit || 999
     })
         .done((cmtData) => {
             if (cmtData.length > 0) {
@@ -128,7 +130,7 @@ function getUserCommentForm(artData) {
             cmtForm = `
                 <div class="cmtUser">Comentando como <em>${user.displayName}</em>:</div>
                 <form method="post" id="formComment" name="formComment">
-                    <textarea name="txtContent" id="txtContent">Comentário fake para testes</textarea>
+                    <textarea name="txtContent" id="txtContent"></textarea>
                     <button type="submit">Enviar</button>
                 </form>
             `
