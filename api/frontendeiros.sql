@@ -1,6 +1,6 @@
 -- ---------------------------------
 -- FrontEndeiros - Banco de dados
--- By Luferat
+-- By Moonsea
 -- MIT License
 -- 
 -- Modela o banco de dados da API do aplicativo.

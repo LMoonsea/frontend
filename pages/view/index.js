@@ -1,46 +1,55 @@
 $(document).ready(myView)
 
 function myView() {
-
+// Constante que contem o id do artigo.
     const articleId = parseInt(sessionStorage.article)
 
     if (isNaN(articleId)) loadpage('e404')
 
+    // Busca os artigos do usuário na API.
     $.get(app.apiBaseURL + 'articles', { id: articleId, status: 'on' })
         .done((data) => {
             if (data.length != 1) loadpage('e404')
+            
             artData = data[0]
             $('#artTitle').html(artData.title)
             $('#artContent').html(artData.content)
+           // Atualiza as views do artigo.
             updateViews(artData)
+            // Muda o título da página.
             changeTitle(artData.title)
-            getAuthor(artData)
+            // Obtém os dados do autor do artigo.
+            getAuthorData(artData)
+            // Obtém os artigos do autor.
             getAuthorArticles(artData, 5)
+            // Gera um formulário para o usuário logado.
             getUserCommentForm(artData)
+            // Obtém todos os comentários dos artigos.
             getArticleComments(artData, 999)
         })
+        // Caso o artigo não exista...
         .fail((error) => {
+            // ... gera um PopUp com uma mensagem de erro.
             popUp({ type: 'error', text: 'Artigo não encontrado!' })
             loadpage('e404')
         })
 
 }
-
-function getAuthor(artData) {
+// Obtém os dados do autor do artigo.
+function getAuthorData(artData) {
     $.get(app.apiBaseURL + 'users/' + artData.author)
         .done((userData) => {
 
-
+            // Obtém as redes sociais do autor através do login social.
             var socialList = ''
             if (Object.keys(userData.social).length > 0) {
                 socialList = '<ul class="social-list">'
                 for (const social in userData.social) {
-                    socialList += `<li><a href="${userData.social[social]}" target="_blank"><i class="fa-brands fa-fw fa-${social.toLowerCase()}"></i> ${social}</a></li>`
+                    socialList += `<li><a href="${userData.social[social]}" target="_blank">${social}</a></li>`
                 }
                 socialList += '</ul>'
             }
-
-
+            // Lista os dados do autor obtidos através do login social.
             $('#artMetadata').html(`<span>Por ${userData.name}</span><span>em ${myDate.sysToBr(artData.date)}.</span>`)
             $('#artAuthor').html(`
                 <img src="${userData.photo}" alt="${userData.name}">
@@ -55,13 +64,15 @@ function getAuthor(artData) {
             loadpage('e404')
         })
 }
-
+// Obtém os artigos do autor.
 function getAuthorArticles(artData, limit) {
 
     $.get(app.apiBaseURL + 'articles', {
         author: artData.author,
         status: 'on',
+        // 
         id_ne: artData.id,
+        // Limita os artigos.
         _limit: limit || 5
     })
         .done((artsData) => {
@@ -69,7 +80,7 @@ function getAuthorArticles(artData, limit) {
                 var output = '<h3><i class="fa-solid fa-plus fa-fw"></i> Artigos</h3><ul>'
                 var rndData = artsData.sort(() => Math.random() - 0.5)
                 rndData.forEach((artItem) => {
-                    output += `<li class="article" data-id="${artItem.id}">${artItem.title}</li>`
+                    output += `<li class="art-item" data-id="${artItem.id}">${artItem.title}</li>`
                 });
                 output += '</ul>'
                 $('#authorArtcicles').html(output)
@@ -81,7 +92,7 @@ function getAuthorArticles(artData, limit) {
         })
 
 }
-
+// Pega todos os comentários do artigo.
 function getArticleComments(artData, limit) {
 
     var commentList = ''
@@ -91,7 +102,7 @@ function getArticleComments(artData, limit) {
         status: 'on',
         _sort: 'date',
         _order: 'desc',
-        _limit: limit || 999
+        _limit: limit
     })
         .done((cmtData) => {
             if (cmtData.length > 0) {
@@ -120,7 +131,7 @@ function getArticleComments(artData, limit) {
         })
 
 }
-
+// Gera um formulário para o usuário caso esteja logado.
 function getUserCommentForm(artData) {
 
     var cmtForm = ''
@@ -130,7 +141,7 @@ function getUserCommentForm(artData) {
             cmtForm = `
                 <div class="cmtUser">Comentando como <em>${user.displayName}</em>:</div>
                 <form method="post" id="formComment" name="formComment">
-                    <textarea name="txtContent" id="txtContent"></textarea>
+                    <textarea name="txtContent" id="txtContent">Comentário fake para testes</textarea>
                     <button type="submit">Enviar</button>
                 </form>
             `
@@ -146,6 +157,7 @@ function getUserCommentForm(artData) {
 
 }
 
+// Envia o comentário com data e hora da postagem.
 function sendComment(event, artData, userData) {
 
     event.preventDefault()
@@ -156,13 +168,16 @@ function sendComment(event, artData, userData) {
     const today = new Date()
     sysdate = today.toISOString().replace('T', ' ').split('.')[0]
 
+    
     $.get(app.apiBaseURL + 'comments', {
         uid: userData.uid,
         content: content,
         article: artData.id
     })
-        .done((data) => {
+         
+           .done((data) => {
             if (data.length > 0) {
+                // Gera um PopUp com uma mensagem de erro caso o comentário já tenha sido enviado anteriormente.
                 popUp({ type: 'error', text: 'Ooops! Este comentário já foi enviado antes...' })
                 return false
             } else {
@@ -177,11 +192,13 @@ function sendComment(event, artData, userData) {
                     date: sysdate,
                     status: 'on'
                 }
-
+    
                 $.post(app.apiBaseURL + 'comments', formData)
-                    .done((data) => {
+                    
+                .done((data) => {
                         if (data.id > 0) {
-                            popUp({ type: 'success', text: 'Seu comentário foi enviado com sucesso!' })
+                     // Gera um PopUp com uma mensagem confirmando que o comentário foi enviado. 
+                        popUp({ type: 'success', text: 'Seu comentário foi enviado com sucesso!' })
                             loadpage('view')
                         }
                     })
@@ -193,6 +210,8 @@ function sendComment(event, artData, userData) {
         })
 
 }
+
+// Atualiza as visualizações do artigo.
 
 function updateViews(artData) {
     $.ajax({
